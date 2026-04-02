@@ -8,7 +8,13 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 from config.defaults import DEFAULT_APP_NAME
-from config.schema import AppConfig, DesktopConfig, GeneralConfig, InvoiceConfig
+from config.schema import (
+    AppConfig,
+    AutomationConfig,
+    DesktopConfig,
+    GeneralConfig,
+    InvoiceConfig,
+)
 from utils.paths import RuntimePaths
 
 T = TypeVar("T")
@@ -35,6 +41,9 @@ class ConfigManager:
             general=_merge_dataclass(GeneralConfig(), data.get("general", {})),
             desktop=_merge_dataclass(DesktopConfig(), data.get("desktop", {})),
             invoice=_merge_dataclass(InvoiceConfig(), data.get("invoice", {})),
+            automation=_merge_dataclass(
+                AutomationConfig(), data.get("automation", {})
+            ),
         )
 
     def save(self, config: AppConfig) -> Path:

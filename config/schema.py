@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 
 from config.defaults import (
+    DEFAULT_AUTOMATION_CONFIG,
     DEFAULT_DESKTOP_CONFIG,
     DEFAULT_GENERAL_CONFIG,
     DEFAULT_INVOICE_CONFIG,
@@ -60,12 +61,31 @@ class InvoiceConfig:
 
 
 @dataclass(slots=True)
+class AutomationConfig:
+    """Automation-specific configuration."""
+
+    enabled: bool = DEFAULT_AUTOMATION_CONFIG["enabled"]
+    mailbox_address: str = DEFAULT_AUTOMATION_CONFIG["mailbox_address"]
+    imap_host: str = DEFAULT_AUTOMATION_CONFIG["imap_host"]
+    imap_port: int = DEFAULT_AUTOMATION_CONFIG["imap_port"]
+    imap_folder: str = DEFAULT_AUTOMATION_CONFIG["imap_folder"]
+    attachment_extensions: list[str] = field(
+        default_factory=lambda: list(DEFAULT_AUTOMATION_CONFIG["attachment_extensions"])
+    )
+    attachment_size_limit_mb: int = DEFAULT_AUTOMATION_CONFIG["attachment_size_limit_mb"]
+    mail_password_env_var: str = DEFAULT_AUTOMATION_CONFIG["mail_password_env_var"]
+    feishu_webhook_env_var: str = DEFAULT_AUTOMATION_CONFIG["feishu_webhook_env_var"]
+    lookback_days: int = DEFAULT_AUTOMATION_CONFIG["lookback_days"]
+
+
+@dataclass(slots=True)
 class AppConfig:
     """Root application configuration."""
 
     general: GeneralConfig = field(default_factory=GeneralConfig)
     desktop: DesktopConfig = field(default_factory=DesktopConfig)
     invoice: InvoiceConfig = field(default_factory=InvoiceConfig)
+    automation: AutomationConfig = field(default_factory=AutomationConfig)
 
     def to_dict(self) -> dict[str, object]:
         """Convert the configuration tree into JSON-serializable data."""

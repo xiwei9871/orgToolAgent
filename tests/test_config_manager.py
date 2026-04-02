@@ -20,6 +20,9 @@ def test_runtime_paths_use_appdata_root(tmp_path: Path, monkeypatch) -> None:
     assert paths.config_file == paths.root / "config.json"
     assert paths.logs_dir.is_dir()
     assert paths.tasks_dir.is_dir()
+    assert paths.automation_dir.is_dir()
+    assert paths.automation_state_file == paths.automation_dir / "mail_job_state.json"
+    assert paths.mail_inbox_dir.is_dir()
 
 
 def test_config_manager_returns_defaults_when_file_missing(
@@ -32,8 +35,9 @@ def test_config_manager_returns_defaults_when_file_missing(
     config = manager.load()
 
     assert isinstance(config, AppConfig)
-    assert config.general.archive_root_name == "桌面整理"
-    assert config.invoice.pending_dir_name == "发票归档_待处理"
+    assert config.automation.mailbox_address == "chenduanxiwei@163.com"
+    assert config.automation.imap_folder == "INBOX"
+    assert config.automation.attachment_extensions == [".pdf"]
 
 
 def test_config_manager_saves_and_reloads_changes(tmp_path: Path, monkeypatch) -> None:
@@ -42,20 +46,20 @@ def test_config_manager_saves_and_reloads_changes(tmp_path: Path, monkeypatch) -
     manager = ConfigManager.for_app("DesktopSmartOrganizer")
 
     config = manager.load()
-    config.general.archive_root_name = "我的桌面归档"
-    config.general.desktop_path = "D:/桌面"
+    config.general.archive_root_name = "鎴戠殑妗岄潰褰掓。"
+    config.general.desktop_path = "D:/妗岄潰"
     config.invoice.hash_algorithm = "md5"
 
     manager.save(config)
     reloaded = manager.load()
 
-    assert reloaded.general.archive_root_name == "我的桌面归档"
-    assert reloaded.general.desktop_path == "D:/桌面"
+    assert reloaded.general.archive_root_name == "鎴戠殑妗岄潰褰掓。"
+    assert reloaded.general.desktop_path == "D:/妗岄潰"
     assert reloaded.invoice.hash_algorithm == "md5"
 
     saved_data = json.loads(manager.paths.config_file.read_text(encoding="utf-8"))
-    assert saved_data["general"]["archive_root_name"] == "我的桌面归档"
-    assert saved_data["general"]["desktop_path"] == "D:/桌面"
+    assert saved_data["general"]["archive_root_name"] == "鎴戠殑妗岄潰褰掓。"
+    assert saved_data["general"]["desktop_path"] == "D:/妗岄潰"
     assert saved_data["invoice"]["hash_algorithm"] == "md5"
 
 

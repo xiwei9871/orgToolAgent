@@ -51,3 +51,16 @@ DEFAULT_INVOICE_CONFIG = {
     "excel_name_pattern": "发票台账_{yyyymm}.xlsx",
     "month_folder_pattern": "发票{yyyymm}",
 }
+
+DEFAULT_AUTOMATION_CONFIG = {
+    "enabled": False,
+    "mailbox_address": "chenduanxiwei@163.com",
+    "imap_host": "imap.163.com",
+    "imap_port": 993,
+    "imap_folder": "INBOX",
+    "attachment_extensions": [".pdf"],
+    "attachment_size_limit_mb": 20,
+    "mail_password_env_var": "DSO_MAIL_APP_PASSWORD",
+    "feishu_webhook_env_var": "DSO_FEISHU_WEBHOOK",
+    "lookback_days": 10,
+}
