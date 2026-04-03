@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -16,17 +16,14 @@ class RuntimePaths:
     logs_dir: Path
     tasks_dir: Path
     invoice_metadata_dir: Path
-    automation_dir: Path | None = None
-    automation_state_file: Path | None = None
-    mail_inbox_dir: Path | None = None
+    automation_dir: Path = field(init=False)
+    automation_state_file: Path = field(init=False)
+    mail_inbox_dir: Path = field(init=False)
 
     def __post_init__(self) -> None:
-        if self.automation_dir is None:
-            self.automation_dir = self.root / "automation"
-        if self.automation_state_file is None:
-            self.automation_state_file = self.automation_dir / "mail_job_state.json"
-        if self.mail_inbox_dir is None:
-            self.mail_inbox_dir = self.automation_dir / "inbox"
+        self.automation_dir = self.root / "automation"
+        self.automation_state_file = self.automation_dir / "mail_job_state.json"
+        self.mail_inbox_dir = self.automation_dir / "inbox"
 
     @classmethod
     def from_env(cls, app_name: str) -> "RuntimePaths":

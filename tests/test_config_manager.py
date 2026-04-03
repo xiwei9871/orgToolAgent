@@ -35,9 +35,43 @@ def test_config_manager_returns_defaults_when_file_missing(
     config = manager.load()
 
     assert isinstance(config, AppConfig)
+    assert config.general.archive_root_name == AppConfig().general.archive_root_name
+    assert config.invoice.pending_dir_name == AppConfig().invoice.pending_dir_name
     assert config.automation.mailbox_address == "chenduanxiwei@163.com"
     assert config.automation.imap_folder == "INBOX"
     assert config.automation.attachment_extensions == [".pdf"]
+
+
+def test_config_manager_merges_partial_automation_section(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Partial automation JSON should override specified fields and keep defaults."""
+    monkeypatch.setenv("APPDATA", str(tmp_path))
+    manager = ConfigManager.for_app("DesktopSmartOrganizer")
+    manager.paths.config_file.write_text(
+        json.dumps(
+            {
+                "automation": {
+                    "enabled": True,
+                    "imap_host": "imap.example.com",
+                    "attachment_extensions": [".pdf", ".xml"],
+                }
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    config = manager.load()
+
+    assert config.automation.enabled is True
+    assert config.automation.imap_host == "imap.example.com"
+    assert config.automation.attachment_extensions == [".pdf", ".xml"]
+    assert config.automation.mailbox_address == AppConfig().automation.mailbox_address
+    assert config.automation.imap_port == AppConfig().automation.imap_port
+    assert config.automation.imap_folder == AppConfig().automation.imap_folder
+    assert config.automation.lookback_days == AppConfig().automation.lookback_days
 
 
 def test_config_manager_saves_and_reloads_changes(tmp_path: Path, monkeypatch) -> None:
