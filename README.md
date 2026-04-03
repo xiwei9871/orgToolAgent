@@ -1,14 +1,15 @@
 # Desktop Smart Organizer
 
-桌面智能整理工具 MVP，面向 Windows 桌面文件整理和发票归档两个高频场景。
+Windows 桌面整理与发票管理工具。
 
 ## 功能概览
 
-- 桌面扫描、预览、执行整理，并支持最近一次撤销
-- 基于规则和启发式分类桌面文件
-- 发票待处理目录扫描、文本提取、解析、去重和归档
-- 按月份归档发票，并导出 Excel 台账
+- 桌面文件扫描、预览、整理与撤销
+- 基于规则的桌面文件分类
+- 发票待处理目录扫描、PDF 文本提取、解析、去重和归档
+- 按月份归档发票并导出 Excel 台账
 - PySide6 图形界面，包含“桌面整理”和“发票管理”两个页面
+- 每周发票自动化 runner，可从邮箱拉取 PDF 附件并复用现有发票流程
 
 ## 运行环境
 
@@ -21,7 +22,7 @@
 python -m pip install -r requirements.txt
 ```
 
-## 启动应用
+## 启动桌面应用
 
 ```powershell
 python main.py
@@ -33,11 +34,7 @@ python main.py
 pytest -q
 ```
 
-当前测试基线为 53 个测试全部通过。
-
 ## 打包
-
-使用脚本打包 Windows 可执行文件：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\build_windows.ps1
@@ -57,13 +54,13 @@ dist\DesktopSmartOrganizer.exe
 
 ## 运行时目录
 
-应用优先将配置、日志、任务记录写入：
+应用优先把配置、日志、任务记录和自动化状态写入：
 
 ```text
 %APPDATA%\DesktopSmartOrganizer\
 ```
 
-如果当前环境无法写入 `%APPDATA%`，会自动回退到：
+如果 `%APPDATA%` 不可写，则自动回退到：
 
 ```text
 <project_root>\.runtime\DesktopSmartOrganizer\
@@ -77,7 +74,7 @@ dist\DesktopSmartOrganizer.exe
 Desktop\发票管理\
 ```
 
-目录下至少包含以下子目录：
+目录下至少包含这些子目录：
 
 ```text
 发票归档_待处理\
@@ -86,21 +83,56 @@ Desktop\发票管理\
 导出报表\
 ```
 
+## Weekly Invoice Automation
+
+仓库包含一个非 GUI 的每周发票自动化入口：
+
+```powershell
+python .\scripts\run_weekly_invoice_job.py
+```
+
+运行前需要设置环境变量：
+
+```powershell
+$env:DSO_MAIL_APP_PASSWORD = "<163-app-password>"
+$env:DSO_FEISHU_WEBHOOK = "<feishu-webhook-url>"
+```
+
+说明：
+
+- runner 必须运行在拥有发票归档根目录的同一台 Windows 机器上
+- 如果 `config.invoice.root_dir` 为空，runner 默认使用 `Desktop\发票管理`
+- 自动化状态默认保存在 `%APPDATA%\DesktopSmartOrganizer\automation\`
+
+推荐的 Windows 计划任务配置：
+
+- Trigger: every Saturday
+- Action: `python C:\path\to\project\scripts\run_weekly_invoice_job.py`
+- Start in: project root
+- Run as: the same Windows account that owns the invoice archive root
+
+预期结果：
+
+- 新 PDF 发票附件会进入待处理目录
+- 现有发票流程会继续执行解析、去重、归档和台账导出
+- 飞书 webhook 会收到执行摘要
+
 ## 项目结构
 
 ```text
 .
-├─ app.py / main.py           # 应用入口
-├─ gui/                       # PySide6 界面
-├─ services/                  # 业务编排层
-├─ core/                      # 桌面整理核心逻辑
-├─ invoice/                   # 发票处理核心逻辑
-├─ classifiers/               # 分类器
-├─ config/                    # 配置模型与默认值
-├─ models/                    # 数据模型
-├─ utils/                     # 通用工具
-├─ tests/                     # 自动化测试
-└─ scripts/                   # 构建脚本
+├── app.py / main.py
+├── automation/
+├── gui/
+├── services/
+├── core/
+├── invoice/
+├── classifiers/
+├── config/
+├── models/
+├── utils/
+├── tests/
+└── scripts/
 ```
 
 ## 当前限制
