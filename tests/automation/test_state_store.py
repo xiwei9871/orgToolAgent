@@ -69,3 +69,41 @@ def test_state_store_preserves_success_cursor_on_failed_run(
     assert reloaded.processed_message_ids == ["1002"]
     assert reloaded.downloaded_attachment_hashes == ["def456"]
     assert reloaded.last_task_summary == {"downloaded": 0, "errors": 1}
+
+
+def test_state_store_creates_parent_directories_for_nested_path(
+    tmp_path: Path,
+) -> None:
+    """Saving to a nested path should create missing parent directories."""
+    state_file = tmp_path / "nested" / "deeper" / "mail_job_state.json"
+    store = AutomationStateStore(state_file)
+
+    store.save(
+        AutomationState(
+            last_success_at="2026-04-03T09:05:00",
+            last_task_summary={"status": "已完成：发票归档"},
+        )
+    )
+
+    assert state_file.parent.is_dir()
+    assert state_file.exists()
+
+
+def test_state_store_persists_utf8_json_content(tmp_path: Path) -> None:
+    """Saved JSON should preserve non-ASCII text when written and reloaded."""
+    state_file = tmp_path / "mail_job_state.json"
+    store = AutomationStateStore(state_file)
+    summary_text = "已完成：发票归档"
+
+    store.save(
+        AutomationState(
+            last_success_at="2026-04-03T09:05:00",
+            last_task_summary={"status": summary_text},
+        )
+    )
+
+    raw_content = state_file.read_text(encoding="utf-8")
+    reloaded = store.load()
+
+    assert summary_text in raw_content
+    assert reloaded.last_task_summary == {"status": summary_text}
